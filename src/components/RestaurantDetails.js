@@ -3,24 +3,26 @@ import { useState, useEffect } from "react";
 export default function RestaurantDetails({
   restroLoading,
   restroError,
-  restaurantDetails,
+  restaurantDetails = [], // Ensure it's always an array
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
 
   useEffect(() => {
-    let filtered = restaurantDetails;
+    let filtered = Array.isArray(restaurantDetails)
+      ? [...restaurantDetails]
+      : [];
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter((restro) =>
-        restro.restaurantName.toLowerCase().includes(searchTerm.toLowerCase())
+        restro.restaurantName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Sort by plan price
-    filtered = filtered.sort((a, b) => {
+    // Sort by plan price (handle null plan cases)
+    filtered.sort((a, b) => {
       const priceA = a.plan?.price || 0;
       const priceB = b.plan?.price || 0;
       return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
@@ -39,19 +41,19 @@ export default function RestaurantDetails({
         <input
           type="text"
           placeholder="Search by restaurant name..."
-          className="border p-2 rounded-md w-full max-w-sm text-gray-800"
+          className="border p-2 rounded-md w-full max-w-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
         {/* Sort Dropdown */}
         <select
-          className="border p-2 rounded-md text-black"
+          className="border p-2 rounded-md"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
         >
-          <option value="asc">Price: High to Low</option>
-          <option value="desc">Price: Low to High</option>
+          <option value="asc">Price: Low to High</option>
+          <option value="desc">Price: High to Low</option>
         </select>
       </div>
 
@@ -73,7 +75,7 @@ export default function RestaurantDetails({
                 className="bg-white p-6 rounded-xl shadow-lg"
               >
                 <h3 className="text-lg font-semibold text-[#5091E5]">
-                  {restro.restaurantName}
+                  {restro.restaurantName || "Unnamed Restaurant"}
                 </h3>
                 <div className="mt-4 space-y-2 text-sm text-black">
                   <p>
@@ -88,13 +90,13 @@ export default function RestaurantDetails({
                   <p>
                     <strong>Phone:</strong> {restro.phoneNumber}
                   </p>
-                  <p className="mt-3 ">
-                    <span className="bg-[#5091E5]/10 text-[#5091E5] px-2 py-1 rounded text-nowrap">
+                  <p className="mt-3">
+                    <span className="bg-[#5091E5]/10 text-[#5091E5] px-2 py-1 rounded">
                       Plan: {restro.plan?.name || "No plan subscribed"}
                     </span>
-                    <p className="my-2">
+                    <span className="ml-2">
                       ${restro.plan?.price || "0"}/month
-                    </p>
+                    </span>
                   </p>
                 </div>
               </div>
