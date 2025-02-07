@@ -6,6 +6,38 @@ export default function EditPlanModal({
   setEditingPlan,
   handlePlanAction,
 }) {
+  const handleFeatureChange = (index, key, value) => {
+    const updatedFeatures = [...(editingPlan.features ?? [])];
+    updatedFeatures[index] = { ...updatedFeatures[index], [key]: value };
+    setEditingPlan({ ...editingPlan, features: updatedFeatures });
+  };
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    const planData = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      price: parseFloat(formData.get("price")),
+      frequency: formData.get("frequency"),
+      tag: formData.get("tag"),
+      features: (editingPlan.features ?? []).map((feature, index) => ({
+        ...feature,
+        featureName: formData.get(`featureName${index}`) || "",
+        isEnabled: formData.get(`isEnabled${index}`) === "on",
+      })),
+    };
+
+    if (planData.features.length === 0) {
+      alert("Please add at least one feature.");
+      return;
+    }
+
+    handlePlanAction(editingPlan._id, planData);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <motion.div
@@ -16,26 +48,10 @@ export default function EditPlanModal({
         <h2 className="text-2xl font-bold text-[#5091E5] mb-6">
           {editingPlan?._id === "new" ? "Create New Plan" : "Edit Plan"}
         </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const planData = {
-              name: formData.get("name"),
-              description: formData.get("description"),
-              price: parseFloat(formData.get("price")),
-              frequency: formData.get("frequency"),
-              tag: formData.get("tag"),
-              features: editingPlan.features.map((feature, index) => ({
-                ...feature,
-                featureName: formData.get(`featureName${index}`),
-                isEnabled: formData.get(`isEnabled${index}`) === "on",
-              })),
-            };
-            handlePlanAction(editingPlan._id, planData);
-          }}
-        >
+
+        <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Column */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -49,6 +65,7 @@ export default function EditPlanModal({
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Description*
@@ -60,6 +77,7 @@ export default function EditPlanModal({
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Price*
@@ -73,6 +91,7 @@ export default function EditPlanModal({
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Frequency*
@@ -92,36 +111,35 @@ export default function EditPlanModal({
                     placeholder="Enter frequency"
                     required
                   />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingPlan({ ...editingPlan, frequency: "per month" })
-                      }
-                      className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                        editingPlan.frequency === "per month"
-                          ? "bg-[#5091E5] text-white"
-                          : "bg-[#5091E5]/10 text-[#5091E5] hover:bg-[#5091E5]/20"
-                      }`}
-                    >
-                      per month
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingPlan({ ...editingPlan, frequency: "per year" })
-                      }
-                      className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                        editingPlan.frequency === "per year"
-                          ? "bg-[#5091E5] text-white"
-                          : "bg-[#5091E5]/10 text-[#5091E5] hover:bg-[#5091E5]/20"
-                      }`}
-                    >
-                      per year
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingPlan({ ...editingPlan, frequency: "per month" })
+                    }
+                    className={`px-3 py-2 text-sm rounded-md ${
+                      editingPlan.frequency === "per month"
+                        ? "bg-[#5091E5] text-white"
+                        : "bg-[#5091E5]/10 text-[#5091E5] hover:bg-[#5091E5]/20"
+                    }`}
+                  >
+                    per month
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingPlan({ ...editingPlan, frequency: "per year" })
+                    }
+                    className={`px-3 py-2 text-sm rounded-md ${
+                      editingPlan.frequency === "per year"
+                        ? "bg-[#5091E5] text-white"
+                        : "bg-[#5091E5]/10 text-[#5091E5] hover:bg-[#5091E5]/20"
+                    }`}
+                  >
+                    per year
+                  </button>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Plan Tag
@@ -136,20 +154,27 @@ export default function EditPlanModal({
               </div>
             </div>
 
+            {/* Right Column (Features) */}
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-700">
-                  Features*
-                </label>
-              </div>
+              <label className="block text-sm font-medium text-gray-700">
+                Features*
+              </label>
+
               <div className="space-y-4">
-                {editingPlan.features.map((feature, index) => (
+                {(editingPlan.features ?? []).map((feature, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex gap-2 items-start">
                       <input
                         type="text"
                         name={`featureName${index}`}
-                        defaultValue={feature.featureName}
+                        value={feature.featureName}
+                        onChange={(e) =>
+                          handleFeatureChange(
+                            index,
+                            "featureName",
+                            e.target.value
+                          )
+                        }
                         className="flex-1 p-2 border text-black border-gray-300 rounded-md"
                         required
                       />
@@ -168,11 +193,19 @@ export default function EditPlanModal({
                         Delete
                       </button>
                     </div>
+
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         name={`isEnabled${index}`}
-                        defaultChecked={feature.isEnabled}
+                        checked={feature.isEnabled}
+                        onChange={(e) =>
+                          handleFeatureChange(
+                            index,
+                            "isEnabled",
+                            e.target.checked
+                          )
+                        }
                         className="form-checkbox h-4 w-4 text-[#5091E5] rounded focus:ring-[#5091E5]"
                       />
                       <span className="text-sm text-gray-700">
@@ -182,34 +215,21 @@ export default function EditPlanModal({
                   </div>
                 ))}
               </div>
+
               <button
                 type="button"
                 onClick={() => {
-                  const newFeatures = [
-                    ...editingPlan.features,
-                    { featureName: "", isEnabled: false },
-                  ];
                   setEditingPlan({
                     ...editingPlan,
-                    features: newFeatures,
+                    features: [
+                      ...(editingPlan.features ?? []),
+                      { featureName: "", isEnabled: false },
+                    ],
                   });
                 }}
-                className="w-full py-2 px-4 border-2 border-dashed border-[#5091E5] text-[#5091E5] rounded-md hover:bg-[#5091E5]/10 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 px-4 border-2 border-dashed border-[#5091E5] text-[#5091E5] rounded-md hover:bg-[#5091E5]/10 transition-colors"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Add Feature
+                + Add Feature
               </button>
             </div>
           </div>
@@ -218,13 +238,13 @@ export default function EditPlanModal({
             <button
               type="button"
               onClick={() => setEditingPlan(null)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 text-gray-800"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-[#5091E5] rounded-md hover:bg-[#6BB1FF]"
+              className="px-4 py-2 bg-[#5091E5] text-white rounded-md hover:bg-[#6BB1FF]"
             >
               {editingPlan?._id === "new" ? "Create Plan" : "Save Changes"}
             </button>

@@ -41,14 +41,14 @@ export default function RestaurantDetails({
         <input
           type="text"
           placeholder="Search by restaurant name..."
-          className="border p-2 rounded-md w-full max-w-sm"
+          className="border p-2 rounded-md w-full max-w-sm text-black"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
         {/* Sort Dropdown */}
         <select
-          className="border p-2 rounded-md"
+          className="border p-2 rounded-md text-black"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
         >

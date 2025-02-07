@@ -45,6 +45,39 @@ export default function AdminPanel() {
     }
   };
 
+  const handlePlanAction = async (planId, planData) => {
+    const token = localStorage.getItem("adminToken");
+
+    try {
+      const method = planId === "new" ? "POST" : "PATCH";
+      const url =
+        method === "POST"
+          ? "https://khanakhajana-f7r6.onrender.com/plan"
+          : `https://khanakhajana-f7r6.onrender.com/plan/${planId}`;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(planData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save plan");
+      }
+
+      // Refresh plans after successful update
+      await fetchPlans();
+      setEditingPlan(null); // Close modal
+    } catch (error) {
+      console.error("Error saving plan:", error);
+      alert(error.message || "Failed to save plan");
+    }
+  };
+
   const fetchRestaurantDetails = async () => {
     try {
       setRestroLoading(true);
@@ -108,6 +141,7 @@ export default function AdminPanel() {
         <EditPlanModal
           editingPlan={editingPlan}
           setEditingPlan={setEditingPlan}
+          handlePlanAction={handlePlanAction} // Pass the handler
         />
       )}
     </>
