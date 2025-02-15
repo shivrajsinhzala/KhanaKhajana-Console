@@ -23,6 +23,7 @@ export default function AdminPanel() {
       router.push("/login");
     } else {
       fetchPlans();
+      fetchRestaurantDetails();
     }
   }, [router]);
 
@@ -45,39 +46,74 @@ export default function AdminPanel() {
     }
   };
 
-  const handlePlanAction = async (planId, planData) => {
-    const token = localStorage.getItem("adminToken");
+const handlePlanAction = async (planId, planData) => {
+  const token = localStorage.getItem("adminToken");
+
+  try {
+    const method = planId === "new" ? "POST" : "PATCH";
+    const url =
+      method === "POST"
+        ? "https://khanakhajana-f7r6.onrender.com/plan/create-plan" // ✅ Corrected URL
+        : `https://khanakhajana-f7r6.onrender.com/plan/${planId}`;
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(planData),
+    });
+
+    // Log raw response before parsing
+    const responseText = await response.text();
+    
 
     try {
-      const method = planId === "new" ? "POST" : "PATCH";
-      const url =
-        method === "POST"
-          ? "https://khanakhajana-f7r6.onrender.com/plan"
-          : `https://khanakhajana-f7r6.onrender.com/plan/${planId}`;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(planData),
-      });
-
+      const jsonResponse = JSON.parse(responseText);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save plan");
+        throw new Error(jsonResponse.message || "Failed to save plan");
       }
-
-      // Refresh plans after successful update
-      await fetchPlans();
-      setEditingPlan(null); // Close modal
     } catch (error) {
-      console.error("Error saving plan:", error);
-      alert(error.message || "Failed to save plan");
+      console.error("Invalid JSON Response:", responseText);
+      throw new Error("Invalid server response, expected JSON");
     }
-  };
 
+    // Refresh plans after successful update
+    await fetchPlans();
+    setEditingPlan(null); // Close modal
+  } catch (error) {
+    console.error("Error saving plan:", error);
+    alert(error.message || "Failed to save plan");
+  }
+};
+
+
+const handleDeletePlan = async (planId) => {
+  try {
+    const response = await fetch(
+      `https://khanakhajana-f7r6.onrender.com/plan/${planId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok){
+      console.log(response)
+      throw new Error("Failed to delete plan");
+    } 
+
+    // Update local state
+    setPlans(plans.filter((plan) => plan._id !== planId));
+    setEditingPlan(null); // Close modal
+  } catch (error) {
+    console.error("Delete error:", error);
+    alert("Failed to delete plan");
+  }
+};
   const fetchRestaurantDetails = async () => {
     try {
       setRestroLoading(true);
@@ -121,7 +157,11 @@ export default function AdminPanel() {
   return (
     <>
       {activeSection === "dashboard" && (
-        <DashboardOverview loading={loading} plans={plans} />
+        <DashboardOverview 
+          loading={loading || restroLoading} 
+          plans={plans}
+          restaurantDetails={restaurantDetails}
+        />
       )}
       {activeSection === "updatePlans" && (
         <UpdatePlans
@@ -142,6 +182,7 @@ export default function AdminPanel() {
           editingPlan={editingPlan}
           setEditingPlan={setEditingPlan}
           handlePlanAction={handlePlanAction} // Pass the handler
+          onDeletePlan={handleDeletePlan}
         />
       )}
     </>

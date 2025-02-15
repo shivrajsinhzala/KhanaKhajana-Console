@@ -3,26 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Login() {
-  const [loginError, setLoginError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoginError("");
-
-    const email = e.target.email.value;
-    const password = e.target.password.value;
+    setIsLoading(true);
 
     try {
       const response = await fetch(
         "https://khanakhajana-f7r6.onrender.com/admin/login",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         }
       );
@@ -31,76 +29,119 @@ export default function Login() {
 
       if (response.ok) {
         localStorage.setItem("adminToken", data.token);
-        router.push("/admin"); // Redirect to admin panel after login
+        router.push("/admin");
       } else {
-        setLoginError(data.msg || "Login failed");
+        alert(data.message || "Login failed");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      setLoginError("Something went wrong. Please try again.");
+      console.error("Login error:", error);
+      alert("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-[#5091E5] to-[#6BB1FF]">
-      <motion.form
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        onSubmit={handleLogin}
-        className="p-8 border rounded-2xl shadow-2xl bg-white transform transition-all duration-300 w-96"
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Left Panel - Decorative */}
+      {/* <motion.div 
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="md:w-1/2 bg-gradient-to-br from-[#5091E5] to-[#6BB1FF] p-12 flex flex-col justify-center items-center text-white"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-[#5091E5] to-[#6BB1FF] bg-clip-text text-transparent">
-          Khanakhajana Admin
-        </h2>
-        {loginError && (
-          <div className="text-red-500 text-sm mb-4">{loginError}</div>
-        )}
-        <motion.div whileFocus={{ scale: 1.05 }} className="mb-4">
-          <input
-            type="text"
-            name="email"
-            placeholder="Username"
-            className="border-2 border-gray-200 p-3 w-full rounded-lg focus:outline-none focus:border-[#5091E5] transition-all text-black"
-            required
-          />
-        </motion.div>
-        <motion.div whileFocus={{ scale: 1.05 }} className="mb-6">
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="border-2 text-black border-gray-200 p-3 w-full rounded-lg focus:outline-none focus:border-[#5091E5] transition-all"
-            required
-          />
-        </motion.div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          type="submit"
-          className="bg-[#5091E5] text-white px-6 py-3 rounded-lg w-full font-semibold shadow-lg hover:shadow-[#5091E5]/50 transition-all"
-        >
-          Login
-        </motion.button>
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={() => router.push("/forgot-password")}
-            className="text-sm text-[#5091E5] hover:underline"
-          >
-            Forgot Password?
-          </button>
+        <h1 className="text-4xl md:text-5xl font-bold mb-6">KhanaKhajana</h1>
+        <p className="text-xl md:text-2xl text-center mb-8">Admin Console</p>
+        <div className="w-64 h-64 relative">
+          
+          
+          <div className="absolute inset-0 bg-white/10 rounded-full animate-pulse">
+          
+
+          
+          </div>
         </div>
-        <div className="mt-2 text-center">
-          <button
-            type="button"
-            onClick={() => router.push("/register")}
-            className="text-sm text-[#5091E5] hover:underline"
-          >
-            Don't have an account? Register
-          </button>
+      </motion.div> */}
+
+      <motion.div
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="md:w-1/2 bg-gradient-to-br from-[#5091E5] to-[#6BB1FF] p-12 flex flex-col justify-center items-center text-white"
+      >
+        <div className="relative w-64 h-64 mb-8">
+          <Image
+            src="/logo.png" // Make sure to add your logo.png to the public folder
+            alt="KhanaKhajana Logo"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
-      </motion.form>
+        <h1 className="text-4xl md:text-5xl font-bold mb-6">KhanaKhajana</h1>
+        <p className="text-xl md:text-2xl text-center">Admin Console</p>
+      </motion.div>
+      
+      {/* Right Panel - Login Form */}
+      <motion.div
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="md:w-1/2 flex items-center justify-center p-12 bg-white"
+      >
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+            <p className="mt-2 text-gray-600">Please sign in to your account</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5091E5] focus:border-transparent transition-all"
+                  placeholder="admin@example.com"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5091E5] focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-white bg-[#5091E5] hover:bg-[#6BB1FF] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5091E5] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </button>
+          </form>
+        </div>
+      </motion.div>
     </div>
   );
 }

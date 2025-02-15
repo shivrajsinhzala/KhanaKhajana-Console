@@ -6,7 +6,7 @@ import { useAdmin } from "../app/context/AdminContext";
 export default function Sidebar() {
   const { activeSection, setActiveSection } = useAdmin();
 
-  return (
+    return (
     <motion.aside
       initial={{ x: -100 }}
       animate={{ x: 0 }}
@@ -18,7 +18,7 @@ export default function Sidebar() {
         animate={{ opacity: 1 }}
         className="text-3xl font-bold text-center mb-8"
       >
-        Khanakhajana
+        KhanaKhajana
       </motion.h2>
       <nav className="mt-6 space-y-2 flex-1">
         {["dashboard", "updatePlans", "restaurantDetails"].map((section) => (
@@ -51,4 +51,5 @@ export default function Sidebar() {
       </button>
     </motion.aside>
   );
+
 }

@@ -1,18 +1,45 @@
 "use client";
 import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
 
 export default function EditPlanModal({
   editingPlan,
   setEditingPlan,
   handlePlanAction,
+  onDeletePlan,
 }) {
+  const newFeatureInputRef = useRef(null);
+  const prevFeaturesLengthRef = useRef(editingPlan.features?.length || 0); // Track previous features length
+  // Handle changes to feature fields
   const handleFeatureChange = (index, key, value) => {
     const updatedFeatures = [...(editingPlan.features ?? [])];
     updatedFeatures[index] = { ...updatedFeatures[index], [key]: value };
-    setEditingPlan({ ...editingPlan, features: updatedFeatures });
+    setEditingPlan({ ...editingPlan, features: updatedFeatures });  
   };
 
 
+   useEffect(() => {
+     const currentLength = editingPlan.features?.length || 0;
+     // Only focus if features were added (not during updates/deletions)
+     if (currentLength > prevFeaturesLengthRef.current) {
+       if (newFeatureInputRef.current) {
+         newFeatureInputRef.current.focus();
+       }
+     }
+     // Update previous length tracker
+     prevFeaturesLengthRef.current = currentLength;
+   }, [editingPlan.features]);
+
+
+
+  // Focus the new feature input when features array changes
+  // useEffect(() => {
+  //   if (newFeatureInputRef.current) {
+  //     newFeatureInputRef.current.focus();
+  //   }
+  // }, [editingPlan.features]);
+
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -30,28 +57,32 @@ export default function EditPlanModal({
       })),
     };
 
+    // Validate at least one feature exists
     if (planData.features.length === 0) {
       alert("Please add at least one feature.");
       return;
     }
 
+    // Call the parent handler for saving/updating the plan
     handlePlanAction(editingPlan._id, planData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white p-8 rounded-2xl w-full max-w-4xl"
       >
+        {/* Modal Title */}
         <h2 className="text-2xl font-bold text-[#5091E5] mb-6">
           {editingPlan?._id === "new" ? "Create New Plan" : "Edit Plan"}
         </h2>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column */}
+            {/* Left Column: Plan Details */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -154,7 +185,7 @@ export default function EditPlanModal({
               </div>
             </div>
 
-            {/* Right Column (Features) */}
+            {/* Right Column: Features */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700">
                 Features*
@@ -177,6 +208,11 @@ export default function EditPlanModal({
                         }
                         className="flex-1 p-2 border text-black border-gray-300 rounded-md"
                         required
+                        ref={
+                          index === (editingPlan.features?.length ?? 0) - 1
+                            ? newFeatureInputRef
+                            : null
+                        } // Set ref for the last input
                       />
                       <button
                         type="button"
@@ -234,17 +270,32 @@ export default function EditPlanModal({
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end space-x-4">
+          {/* Action Buttons */}
+          <div className="mt-6 flex justify-end items-center gap-4">
+            {/* Delete Button (only for existing plans) */}
+            {editingPlan?._id !== "new" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to delete this plan?")) {
+                    onDeletePlan(editingPlan._id);
+                  }
+                }}
+                className="mr-auto px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-colors"
+              >
+                Delete Plan
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setEditingPlan(null)}
-              className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 text-gray-800"
+              className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 text-gray-800"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#5091E5] text-white rounded-md hover:bg-[#6BB1FF]"
+              className="px-4 py-2 bg-[#5091E5] text-white rounded-md hover:bg-[#6BB1FF] focus:ring-2 focus:ring-[#5091E5] focus:ring-opacity-50"
             >
               {editingPlan?._id === "new" ? "Create Plan" : "Save Changes"}
             </button>

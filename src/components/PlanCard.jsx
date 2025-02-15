@@ -10,7 +10,7 @@ export default function PlanCard({ plan, setEditingPlan }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.03 }}
-      className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl border border-gray-100 transition-all relative"
+      className="p-6 bg-white relative rounded-xl shadow-lg hover:shadow-xl border border-gray-100 transition-all"
     >
       <button
         onClick={() => setEditingPlan(plan)}
@@ -21,7 +21,7 @@ export default function PlanCard({ plan, setEditingPlan }) {
       <div className="space-y-4">
         <h3 className="text-xl font-bold text-[#5091E5]">{plan.name}</h3>
         {plan.tag && (
-          <span className="inline-block bg-[#5091E5]/10 text-[#5091E5] px-3 py-1 rounded-full text-sm">
+          <span className="absolute right-10 top-0 -translate-y-7 bg-[#5091E5]/10 text-[#5091E5] px-3 py-1 rounded-full text-sm">
             {plan.tag}
           </span>
         )}
